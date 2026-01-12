@@ -110,6 +110,49 @@ SOURCES:
 ...
 ```
 
+## Two Modes of Use
+
+### 1. User Mode (Interactive CLI)
+
+Direct question-answering with the built-in Groq LLM:
+
+```bash
+python meerkat_rag.py "What discoveries has MeerKAT made about pulsars?"
+```
+
+- Query expansion generates 3-5 search variations
+- Retrieves top 5 chunks, generates cited answer
+- Good for quick, focused questions
+
+### 2. Agentic Mode (LLM-Orchestrated Search)
+
+For use with Claude Code or other AI assistants that can reason over results:
+
+```bash
+python search_papers.py "dark matter axion WIMP searches" --top-k 15
+```
+
+- Returns JSON for the agent to process
+- Higher `--top-k` (15-20) gives more context to reason over
+- Agent can: scan results, filter relevance, do follow-up searches, synthesize across papers
+
+**Agentic workflow example:**
+```
+User: "Are there any particle physics results from MeerKAT?"
+         ↓
+Agent searches: "fundamental physics dark matter gravitational waves"
+         ↓
+Agent scans 15 results, identifies themes:
+  - Axion dark matter (pulsar magnetospheres)
+  - WIMP annihilation (galaxy clusters)
+  - GR tests (double pulsar)
+  - Gravitational wave background (pulsar timing array)
+         ↓
+Agent does targeted follow-up: "pulsar timing general relativity tests"
+         ↓
+Agent synthesizes comprehensive answer with citations
+```
+
 ## Configuration
 
 | Variable | Description | Required |
@@ -121,6 +164,7 @@ SOURCES:
 
 - `download_meerkat_papers.py` - Download and extract papers from ADS/arXiv
 - `meerkat_rag.py` - RAG system with indexing, search, and generation
+- `search_papers.py` - JSON search interface for agentic workflows
 - `meerkat_papers.json` - Downloaded paper metadata and full text (generated)
 - `papers/` - Downloaded PDFs and extracted text (generated)
 - `chroma_db/` - Vector database (generated)
