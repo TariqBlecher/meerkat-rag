@@ -262,7 +262,7 @@ Output: ["MeerKAT surveys MIGHTEE LADUMA MALS MeerTRAP", "MeerKAT large survey p
         search_results = sorted(all_results.values(), key=lambda x: x.similarity, reverse=True)
         return search_results[:top_k]
 
-    def generate_answer(self, query: str, top_k: int = 5) -> Dict:
+    def generate_answer(self, query: str, top_k: int = 5, sort_by_year: bool = False) -> Dict:
         """Generate an answer using RAG."""
         if not self.llm:
             return {
@@ -279,6 +279,10 @@ Output: ["MeerKAT surveys MIGHTEE LADUMA MALS MeerTRAP", "MeerKAT large survey p
                 "sources": []
             }
 
+        # Optionally sort by year (chronologically)
+        if sort_by_year:
+            results = sorted(results, key=lambda x: x.year or '0')
+
         # Build context from results
         context_parts = []
         for i, r in enumerate(results, 1):
@@ -291,6 +295,7 @@ Output: ["MeerKAT surveys MIGHTEE LADUMA MALS MeerTRAP", "MeerKAT large survey p
         system_prompt = """You are an expert astronomy research assistant specializing in MeerKAT telescope publications.
 Answer questions based on the provided research paper excerpts.
 Always cite which sources you use (e.g., "According to Source 1...").
+When discussing temporal progression or history, organize your answer chronologically by publication year.
 If the answer cannot be found in the sources, say so clearly.
 Be precise and scientific in your language."""
 

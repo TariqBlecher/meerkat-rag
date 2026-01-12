@@ -94,15 +94,39 @@ class ADSClient:
         self.headers = {"Authorization": f"Bearer {self.api_token}"}
 
     def get_library_bibcodes(self, library_id: str) -> List[str]:
-        """Get all bibcodes from an ADS library."""
+        """Get all bibcodes from an ADS library with pagination."""
         url = f"{self.BASE_URL}/biblib/libraries/{library_id}"
-        response = requests.get(url, headers=self.headers)
-        response.raise_for_status()
 
-        data = response.json()
-        bibcodes = data.get('documents', [])
-        print(f"Found {len(bibcodes)} papers in library")
-        return bibcodes
+        all_bibcodes = []
+        start = 0
+        rows = 100  # Fetch 100 at a time
+
+        while True:
+            params = {'start': start, 'rows': rows}
+            response = requests.get(url, headers=self.headers, params=params)
+            response.raise_for_status()
+
+            data = response.json()
+            bibcodes = data.get('documents', [])
+            total = data.get('metadata', {}).get('num_documents', 0)
+
+            if start == 0:
+                print(f"Library contains {total} papers total")
+
+            if not bibcodes:
+                break
+
+            all_bibcodes.extend(bibcodes)
+            print(f"  Fetched {len(all_bibcodes)}/{total} bibcodes...")
+
+            if len(all_bibcodes) >= total or len(bibcodes) < rows:
+                break
+
+            start += rows
+            time.sleep(0.3)  # Be nice to the API
+
+        print(f"Found {len(all_bibcodes)} papers in library")
+        return all_bibcodes
 
     def get_papers_metadata(self, bibcodes: List[str], batch_size: int = 50) -> List[Paper]:
         """Fetch full metadata for papers by bibcode."""
